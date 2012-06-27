@@ -1,0 +1,3 @@
+qinglan = window.qinglan || function(){
+	
+}
