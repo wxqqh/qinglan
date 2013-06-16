@@ -23,8 +23,8 @@ modulejs主要是面向已经把多个前台js文件concat为一个的情景。�
 ```
 或者
 ```js
-	defined('a', function(){
-		var msg = 'module a';
+	defined('b', function(){
+		var msg = 'module b';
 
 		return {
 			msg: msg,
@@ -32,5 +32,18 @@ modulejs主要是面向已经把多个前台js文件concat为一个的情景。�
 				console.log(msg);
 		}
 	}
+	});
+```
+
+* 获取一个模块
+```js
+	var a = require('a');
+	a.show();
+```
+
+* 获取多个模块
+```js
+	require(['a', 'b'], function(a, b){
+		a.show();
 	});
 ```
