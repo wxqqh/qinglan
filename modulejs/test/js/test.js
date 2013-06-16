@@ -35,3 +35,16 @@ defined('c', ['a', 'b'], function(a, b, require, exports, module){
 
 	console.log('_c ' + _c.msg);
 });
+
+
+defined('d', 'c', function(c){
+	var msg = 'module d';
+	console.log(msg);
+	c.show();
+	return {
+		msg: msg,
+		show: function(){
+			console.log(msg);
+		}
+	}
+});
