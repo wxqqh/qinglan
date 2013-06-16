@@ -1,7 +1,6 @@
 ;(function (global) {
-	var ID = 0,
+	var modules = {},
 		def = ["require", "exports", "module"],
-		modules = {},
 		is = function(type, obj){
 			return Object.prototype.toString.call(obj).slice(8, -1) === type;
 		},
@@ -20,8 +19,7 @@
 			this.exports = null;
 		},
 		getExports = function(id){
-			var factory, deps, exports, defDep, depList = {};
-			m = modules[id]
+			var factory, deps, exports, defDep, depList = {}, m = modules[id];
 			if(!m) return null;
 			if(m.exports) return m.exports;
 
@@ -55,21 +53,22 @@
 			return id;
 		},
 		require = function(ids, fn) {
-			var fnArgs, reqs = {}, 
-			ids = [].concat(ids);
+			var fnArgs, reqs = {},
+			ids = [].concat(ids),
+			len = ids.length;
 
 			ids.forEach(function(id){
 			 	reqs[id] = def.indexOf(id) > -1 ? defDep[id] : getExports(id);
 			});
 
-			is('Function', fn) && fn.apply(null, ids.length ? swap(ids , reqs) : []);
+			is('Function', fn) && fn.apply(null, len ? swap(ids , reqs) : []);
 
-			return ids.length == 1 ? reqs[ids[0]] : reqs;
+			return len == 1 ? reqs[ids[0]] : reqs;
 		};
 		require.async = function(ids, fn){
 			setTimeout(function() { require(ids, fn) }, 0);
 		};
-	global.modules =modules,
+	global.modules = modules,
 	global.require = require,
 	global.defined = defined;
 })(window);
