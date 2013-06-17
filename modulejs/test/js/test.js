@@ -48,3 +48,8 @@ defined('d', 'c', function(c){
 		}
 	}
 });
+
+defined('e',function (require, exports, module) {
+	var eventEmitter = require('events').eventEmitter;
+	module.exports = new eventEmitter();
+});
