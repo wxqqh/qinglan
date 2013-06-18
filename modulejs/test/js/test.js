@@ -53,3 +53,13 @@ defined('e',function (require, exports, module) {
 	var eventEmitter = require('events').eventEmitter;
 	module.exports = new eventEmitter();
 });
+
+
+defined('f',function (require, exports, module) {
+	var f = {};
+	f.msg = 'module f';
+	f.show = function(){
+			console.log(msg);
+	}
+	return f;	
+});
