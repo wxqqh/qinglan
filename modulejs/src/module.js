@@ -46,7 +46,7 @@
 		},
 		defined = function(id, deps, factory) { // 模块定义必须要有id
 			var m;
-			is('Function', deps) && (factory=deps, deps= null); // 如果deps是一个函数，则覆盖factory，deps置空
+			is('Undefined', factory) && (factory=deps, deps= null); // 如果factory是Undefined，则覆盖factory，deps置空
 			deps = deps ? [].concat(deps) : [];
 			m = new module(id, deps, factory);
 			modules[id] = m;
