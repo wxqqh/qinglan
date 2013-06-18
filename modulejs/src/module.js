@@ -58,7 +58,7 @@
 			len = ids.length;
 
 			ids.forEach(function(id){
-			 	reqs[id] = def.indexOf(id) > -1 ? defDep[id] : getExports(id);
+			 	reqs[id] = getExports(id);
 			});
 
 			is('Function', fn) && fn.apply(null, len ? swap(ids , reqs) : []);
