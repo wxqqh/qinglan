@@ -1,4 +1,4 @@
-defined('a', function(require, exports, module){
+define('a', function(require, exports, module){
 	var msg = 'module a';
 
 	exports.msg = msg;
@@ -10,7 +10,7 @@ defined('a', function(require, exports, module){
 	}
 });
 
-defined('b', function(require, exports, module){
+define('b', function(require, exports, module){
 	var msg = 'module b';
 
 	exports.msg = msg;
@@ -20,7 +20,7 @@ defined('b', function(require, exports, module){
 	}
 });
 
-defined('c', ['a', 'b'], function(a, b, require, exports, module){
+define('c', ['a', 'b'], function(a, b, require, exports, module){
 	var msg = 'module c';
 	console.log(msg);
 	a.show();
@@ -37,7 +37,7 @@ defined('c', ['a', 'b'], function(a, b, require, exports, module){
 });
 
 
-defined('d', 'c', function(c){
+define('d', 'c', function(c){
 	var msg = 'module d';
 	console.log(msg);
 	c.show();
@@ -49,13 +49,13 @@ defined('d', 'c', function(c){
 	}
 });
 
-defined('e',function (require, exports, module) {
+define('e',function (require, exports, module) {
 	var eventEmitter = require('events').eventEmitter;
 	module.exports = new eventEmitter();
 });
 
 
-defined('f',function (require, exports, module) {
+define('f',function (require, exports, module) {
 	var f = {};
 	f.msg = 'module f';
 	f.show = function(){

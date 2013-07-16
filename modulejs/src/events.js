@@ -1,4 +1,4 @@
-defined('events', function (require, exports, module) {
+define('events', function (require, exports, module) {
 	var eventEmitter = function(){
 		this.listeners = {};
 	};

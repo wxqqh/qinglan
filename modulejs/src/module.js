@@ -19,7 +19,7 @@
 			this.exports = null;
 		},
 		getExports = function(id){
-			var factory, deps, exports, defDep, depList = {}, m = modules[id];
+			var factory, deps, exports, defDep, depList = {}, m = modules[id], duration = 0;
 			if(!m) return null;
 			if(m.exports) return m.exports;
 
@@ -35,21 +35,24 @@
 				deps.forEach(function (dep) {
 					depList[dep] = def.indexOf(dep) > -1 ? defDep[dep] : getExports(dep);
 				});
+				duration = Date.now()
 				exports = factory.apply(m, factory.length ? swap(deps, depList) : []);
+				duration = Date.now() - duration;
 			} else {
 				exports = factory;
 			}
 
 			m.exports = exports || m.exports;
-
+			console.log('module getExports id : ' + id + ' duration : ' + duration); // @debug
 			return m.exports;
 		},
-		defined = function(id, deps, factory) { // 模块定义必须要有id
+		define = function(id, deps, factory) { // 模块定义必须要有id
 			var m;
-			is('Undefined', factory) && (factory=deps, deps= null); // 如果factory是Undefined，则覆盖factory，deps置空
+			factory == void 0 && (factory=deps, deps= null); // 如果factory是undefined，则覆盖factory，deps置空
 			deps = deps ? [].concat(deps) : [];
 			m = new module(id, deps, factory);
 			modules[id] = m;
+			console.log('module define id : ' + id); // @debug
 			return id;
 		},
 		require = function(ids, fn) {
@@ -70,5 +73,5 @@
 		};
 	global.modules = modules,
 	global.require = require,
-	global.defined = defined;
+	global.define = define;
 })(window);

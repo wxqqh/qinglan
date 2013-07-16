@@ -1,6 +1,6 @@
 # modulejs
 
-modulejs主要是面向已经把多个前台js文件concat为一个的情景。本身接口简单，只有`require`和`defined`两个接口。
+modulejs主要是面向已经把多个前台js文件concat为一个的情景。本身接口简单，只有`require`和`define`两个接口。
 
 ## 主要功能
 
@@ -11,7 +11,7 @@ modulejs主要是面向已经把多个前台js文件concat为一个的情景。�
 ## sample
 * 定义一个模块
 ```js
-	defined('a', function(require, exports, module){
+	define('a', function(require, exports, module){
 		var msg = 'module a';
 
 		exports.msg = msg;
@@ -23,7 +23,7 @@ modulejs主要是面向已经把多个前台js文件concat为一个的情景。�
 ```
 或者
 ```js
-	defined('b', function(){
+	define('b', function(){
 		var msg = 'module b';
 
 		return {
