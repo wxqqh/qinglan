@@ -20,6 +20,15 @@
 		},
 		getExports = function(id){
 			var factory, deps, exports, defDep, depList = {}, m = modules[id], duration = 0;
+			// TODO : 需要进行修改，支持id中带有!符号的插件模式
+			if(id.indexOf('!') > -1) { // 插件模式
+				var parts = id.split('!'),
+					plugId = parts[0],
+					plugSource = parts[1];
+
+			} else { // 普通模式
+				// TODO : 普通模式加载完善
+			}
 			if(!m) return null;
 			if(m.exports) return m.exports;
 
@@ -68,9 +77,15 @@
 
 			return len == 1 ? reqs[ids[0]] : reqs;
 		};
-		require.async = function(ids, fn){
+
+	define.plugin = {};
+
+	require.async = function(ids, fn){
 			setTimeout(function() { require(ids, fn) }, 0);
 		};
+
+	
+
 	global.modules = modules,
 	global.require = require,
 	global.define = define;
