@@ -20,15 +20,11 @@
 		},
 		getExports = function(id){
 			var factory, deps, exports, defDep, depList = {}, m = modules[id], duration = 0;
-			// TODO : 需要进行修改，支持id中带有!符号的插件模式
-			if(id.indexOf('!') > -1) { // 插件模式
-				var parts = id.split('!'),
-					plugId = parts[0],
-					plugSource = parts[1];
 
-			} else { // 普通模式
-				// TODO : 普通模式加载完善
+			if(id.indexOf('!') > -1) { // 加载同步插件
+				return getPlugin(id);
 			}
+
 			if(!m) return null;
 			if(m.exports) return m.exports;
 
@@ -44,9 +40,9 @@
 				deps.forEach(function (dep) {
 					depList[dep] = def.indexOf(dep) > -1 ? defDep[dep] : getExports(dep);
 				});
-				duration = Date.now()
+				duration = Date.now(); // @debug
 				exports = factory.apply(m, factory.length ? swap(deps, depList) : []);
-				duration = Date.now() - duration;
+				duration = Date.now() - duration; // @debug
 			} else {
 				exports = factory;
 			}
@@ -54,6 +50,31 @@
 			m.exports = exports || m.exports;
 			console.log('module getExports id : ' + id + ' duration : ' + duration); // @debug
 			return m.exports;
+		},
+		getPlugin = function(id) {
+			var parts = id.split('!'), pluginId = parts[0] || '', plugSource = parts[1] || '', plugin, m = modules[id], duration = 0, load, definition;
+			
+			if(m && m.exports) { 
+				return m.exports; //如果这个资源ID已经被初始化过，则直接返回
+			} else if(plugSource) {
+				m = new module(id); // 初始化资源模块
+				duration = Date.now(); // @debug
+				plugin = getExports(pluginId); // 获取插件
+				if(plugin) {
+					load = function (definition) { // 插件加载完毕
+						m.exports = definition || {};
+						modules[id] = m; // 覆盖pluginModule
+					};
+					plugin.normalize && (plugSource = plugin.normalize(plugSource)); // 如果模块定义了normalize方法，则调用它，得到标准化之后的plugSource
+					plugin.load &&  (definition = plugin.load(plugSource, require, load, define.plugin)); // 执行模块定义的load方法，所有插件加载模块都必须实现的load方法
+					!m.exports && load(definition); // 如果module的exports没有被赋值，则把load方法的返回值覆盖
+					duration = Date.now() - duration; // @debug
+					console.log('module getPlugin id : ' + id + ' duration : ' + duration); // @debug
+					return m.exports; // 返回插件模块加载好的模块
+				} else {
+					return null;
+				}
+			}
 		},
 		define = function(id, deps, factory) { // 模块定义必须要有id
 			var m;
@@ -83,8 +104,6 @@
 	require.async = function(ids, fn){
 			setTimeout(function() { require(ids, fn) }, 0);
 		};
-
-	
 
 	global.modules = modules,
 	global.require = require,

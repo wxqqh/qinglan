@@ -59,7 +59,19 @@ define('f',function (require, exports, module) {
 	var f = {};
 	f.msg = 'module f';
 	f.show = function(){
-			console.log(msg);
+		console.log(f.msg);
 	}
 	return f;	
 });
+
+
+define('plugin', function (require, exports, module) {
+	exports.load = function(source, require, load, config) {
+		return require(source);
+	};
+});
+
+define('g', function() {
+	var pluginF = require('plugin!f');
+	pluginF.show();
+})
