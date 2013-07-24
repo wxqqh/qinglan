@@ -17,6 +17,8 @@
 			this.deps = deps || [];
 			this.factory = factory;
 			this.exports = null;
+			this.loader= null;
+			this.plugins = [];
 		},
 		getExports = function(id){
 			var factory, deps, exports, defDep, depList = {}, m = modules[id], duration = 0;
@@ -52,7 +54,7 @@
 			return m.exports;
 		},
 		getPlugin = function(id) {
-			var parts = id.split('!'), pluginId = parts[0] || '', plugSource = parts[1] || '', plugin, m = modules[id], duration = 0, load, definition;
+			var parts = id.split('!'), pluginId = parts[0] || '', plugSource = parts[1] || '', plugin, plugModule, m = modules[id], duration = 0, load, definition;
 			
 			if(m && m.exports) { 
 				return m.exports; //如果这个资源ID已经被初始化过，则直接返回
@@ -70,6 +72,9 @@
 					!m.exports && load(definition); // 如果module的exports没有被赋值，则把load方法的返回值覆盖
 					duration = Date.now() - duration; // @debug
 					console.log('module getPlugin id : ' + id + ' duration : ' + duration); // @debug
+
+					m.loader = plugin;
+					modules[pluginId].plugins.push(m.exports);
 					return m.exports; // 返回插件模块加载好的模块
 				} else {
 					return null;
