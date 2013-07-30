@@ -32,17 +32,10 @@ findAll = (dir, cb) ->
 						fileNames.forEach (filename) ->
 							findAll path.join(dir, filename), cb
 
-run = (target) ->
+run = (target, cb) ->
 	findAll target, (dir)->
 		doWatch dir, ()->
-			log 'BUILD!!!!'
+			cb && cb.apply null, arguments
 
-exports.run = run;
 
-args = process.argv.splice 2
-target = args[0] || ''
-
-if target
-	run target
-else
-	log 'Param path is null. Please user me like "coffee watch.coffee (path)"'
+exports.run = run
