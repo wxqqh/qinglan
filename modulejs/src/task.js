@@ -147,6 +147,7 @@ define('Task', function(require, exports, module) {
  	 * @return {Task}       Task
  	 */
  	Task.prototype.destroy = function() {
+ 		this.state = Task.STATE.FINISH;
 		this.reason = null; // 出错的时候抛出的原因
 		this.parent = null; // 父调用Task对象
 		this.handles = []; // 缓存需要处理的队列
