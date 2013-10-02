@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Task</title>
+</head>
+<body>
+	<script type="text/javascript" src="../src/module.js"></script>
+	<script type="text/javascript" src="../src/task.js"></script>
+	<script type="text/javascript">
+		var Task = require('Task');
+
+		t = new Task(function() {
+			return 1;
+		});
+		t.then(function(x) {
+			console.log('t resolve 1 ' + x);
+			return x + 1;
+		})
+		.then(function(x) {
+			console.log('t resolve 2 ' + x);
+			return x + 1;
+		})
+		.then(function(x) {
+			console.log('t resolve last ' + x);
+		})
+		.start();
+		
+		var t1 = new Task(function () {
+			return 1;
+		});
+		t1.then(function(x) {
+			console.log('t1 resolve 1  ' + x);
+			return x + 1;
+		})
+		.then(function(x) {
+			console.log('t1 resolve 2  ' + x);
+			return new Task(function() {
+				this.async = false;
+				return 'async callback'
+			});
+		})
+		.then(function(value) {
+			console.log(value); // log 'async callback'
+		})
+		.start();
+
+		var imgTask = new Task('http://www.baidu.com/img/bdlogo.gif');
+		imgTask.then(function(url) {
+			var t = this;
+			return new Task(function() {
+				var i = new Image();
+
+				i.onload = function() {
+					t.resolve(i);
+				};
+				i.onerror = function() {
+					t.reject('loadError');
+				};
+
+				i.src = url;
+			});
+		}).then(function(img){
+			console.log('load img success!!' + img.src);
+		}, function(errmsg) {
+			console.log('load img error' + errmsg);
+		}).start();
+	</script>
+</body>
+</html>
