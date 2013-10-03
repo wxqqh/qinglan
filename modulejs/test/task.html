@@ -65,6 +65,69 @@
 		}, function(errmsg) {
 			console.log('load img error' + errmsg);
 		}).start();
+
+
+		var imgTask = new Task('http://www.baidu.com/img/bdlogo.gif');
+		imgTask.then(function(url) {
+			var t = this;
+			return new Task(function() {
+				var i = new Image();
+
+				i.onload = function() {
+					t.resolve(i);
+				};
+				i.onerror = function() {
+					t.reject('loadError');
+				};
+
+				i.src = url;
+			});
+		}).then(function(img){
+			console.log('load img success!!' + img.src);
+		}, function(errmsg) {
+			console.log('load img error' + errmsg);
+		}).start();
+
+		var mapTask = Task.create().map({
+			logo_smal: function() {
+				var t = this;
+				var url = 'http://tb2.bdstatic.com/tb/static-common/img/search_logo_7098cbef.png';
+
+				return Task.create(function() {
+					var i = new Image();
+
+					i.onload = function() {
+						t.resolve(i);
+					};
+					i.onerror = function() {
+						t.reject('loadError');
+					};
+
+					i.src = url;
+				});
+			},
+			logo_big: function() {
+				var t = this;
+				var url = 'http://www.baidu.com/img/bdlogo.gif';
+
+				return Task.create(function() {
+					var i = new Image();
+
+					i.onload = function() {
+						t.resolve(i);
+					};
+					i.onerror = function() {
+						t.reject('loadError');
+					};
+
+					i.src = url;
+				});
+			}
+
+		}).then(function(ctx) {
+			console.log(ctx)
+		}).start();
+
 	</script>
 </body>
 </html>

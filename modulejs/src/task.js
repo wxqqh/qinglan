@@ -1,8 +1,11 @@
 define('Task', function(require, exports, module) {
 	'use strict';
 	var isFun = function (obj) {
-		return Object.prototype.toString.call(obj).slice(8,-1) == 'Function';
-	};
+			return Object.prototype.toString.call(obj).slice(8,-1) == 'Function';
+		},
+		raf = window.requestAnimationFrame  || function(callback) {
+				window.setTimeout(callback, 0);
+			};
 
 	/**
 	 * Task 构造函数
@@ -16,6 +19,8 @@ define('Task', function(require, exports, module) {
 
 		this.parent = null; // 父调用Task对象
 		this.handles = []; // 缓存需要处理的队列
+
+		this.context = {};
 	}
 
 	/**
@@ -32,11 +37,20 @@ define('Task', function(require, exports, module) {
 
 	/**
 	 * 是否Task对象<br/>特性判断
-	 * @param  {Task|Object }  obj [description]
-	 * @return {Boolean}     [description]
+	 * @param  {Task|Object }  obj 被判断的对象
+	 * @return {Boolean}     是否是Task对象
 	 */
 	Task.isTask = function(obj) {
 		return obj && isFun(obj.then);
+	};
+
+	/**
+	 * 创建一个Task实例
+	 * @param  {Object|Function} msg 需要发送的消息
+	 * @return {[type]}     [description]
+	 */
+	Task.create = function (msg) {
+		return new Task(msg);
 	};
 
 	/**
@@ -65,9 +79,8 @@ define('Task', function(require, exports, module) {
 	/**
 	 * Task.strategy 策略模式 回调方法 <br/>
 	 * 
-	 * @param  {[type]} task [description]
-	 * @param  {[type]} ret  [description]
-	 * @return {[type]}      [description]
+	 * @param  {Task} task Task
+	 * @param  {Task|Object} ret  handle 返回值
 	 */
 	Task.reCall = function(task, ret) {
 		if(Task.isTask(ret)) {
@@ -80,6 +93,10 @@ define('Task', function(require, exports, module) {
 	};
 
 	// method plugin start ==================
+	/**
+	 * 策略模式
+	 * @type {Object}
+	 */
 	Task.strategy = {
 		'then': function(handle) {
 			var fulfilled = handle.fulfilled,
@@ -96,6 +113,35 @@ define('Task', function(require, exports, module) {
 			
 			this.msg = ret;
 			Task.reCall(this, ret); // 策略回调，进行下一步
+		},
+		'map': function(handle) {
+			var task = this,
+				map = handle.map,
+				ctx = {},
+				count = 0,
+				cb = function (key, value) {
+					count--;
+					ctx[key] = value;
+
+					count == 0 && Task.reCall(task, ctx); // 策略回调，进行下一步
+				};
+			for(var k in map) {
+				count++;
+				var v = map[k];
+				(function(key, value) {
+					raf(function() {
+						if(isFun(value)) { // 如果是一个异步的fn，则创建Task在回调的时候执行
+							Task.create().then(value).then(function(ret){
+								cb(key, ret);
+							}).start();
+						} else { // 如果是一个对象，则直接调用cb
+							cb(key, value);
+						}
+						
+					});
+				})(k, v);
+			}
+
 		}
 	}
 	/**
@@ -109,6 +155,18 @@ define('Task', function(require, exports, module) {
 			cmd: 'then',
 			fulfilled: fulfilled,
 			rejected: rejected
+		});
+		return this;
+	};
+	/**
+	 * Task Map
+	 * @param  {Object} map 需要进行map操作的对象
+	 * @return {Task}           Task
+	 */
+	Task.prototype.map = function(map) {
+		this.handles.push({
+			cmd: 'map',
+			map: map
 		});
 		return this;
 	};
@@ -151,6 +209,7 @@ define('Task', function(require, exports, module) {
 		this.reason = null; // 出错的时候抛出的原因
 		this.parent = null; // 父调用Task对象
 		this.handles = []; // 缓存需要处理的队列
+		this.context = {};
  	};
 
 	module.exports = Task;
