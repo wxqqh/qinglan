@@ -65,6 +65,11 @@ define('Task', function(require, exports, module) {
 		task.msg = value;
 		if(Task.STATE.FINISH == this.state) return task;
 
+		if(Task.isTask(value)){
+			Task.reCall(task, value);
+			return task;
+		}
+
 		var handle = task.handles.shift();	
 		if(handle){
 			var process = Task.strategy[handle.cmd]; // 获取到处理当前cmd的处理函数
@@ -196,7 +201,9 @@ define('Task', function(require, exports, module) {
 	 * @return {Task}       Task
 	 */
 	Task.prototype.start = function() {
-		isFun(this.msg) && (this.msg = this.msg.call(this));
+		while(isFun(this.msg)) {
+			this.msg = this.msg.call(this);
+		}
 		return this.resolve(this.msg); // start All
 	};
  	
