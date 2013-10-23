@@ -209,6 +209,25 @@ define('Task', function(require, exports, module) {
 	};
 
 	/**
+	 * 回调parent 的 resolved，通知parent继续执行fulfilled
+	 * @param  {Task|Object} value Task next 传递参数
+	 * @return {Task}       Task
+	 */
+	Task.prototype.parentResolve = function (value) {
+		this.parent && this.parent.resolve(value);
+		return this;
+	};
+	
+	/**
+	 * 回调parent 的 rreject，通知parent继续执行rejected
+	 * @param  {Task|Object} value Task next 传递参数
+	 * @return {Task}       Task
+	 */
+	Task.prototype.parentReject = function (value) {
+		this.parent && this.parent.reject(value);
+		return this;
+	};
+	/**
 	 * 开始执行Task
 	 * @return {Task}       Task
 	 */
