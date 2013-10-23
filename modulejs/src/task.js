@@ -19,7 +19,7 @@ define('Task', function(require, exports, module) {
 
 		this.parent = null; // 父调用Task对象
 		this.handles = []; // 缓存需要处理的队列
-
+		this.children = []; // 子Task对象数组
 		this.context = {};
 	}
 
@@ -76,7 +76,7 @@ define('Task', function(require, exports, module) {
 			process && process.call(task, handle);
 		} else {
 			!task.async && task.parent &&  task.parent.resolve(task.msg); // 回调父Task
-			task.destroy();
+			!task.parent && Task.destroy(task);
 		}
 		return task;
 	};
@@ -91,12 +91,24 @@ define('Task', function(require, exports, module) {
 		if(Task.isTask(ret)) {
 			task.state = Task.STATE.DELEGATING;
 			ret.parent = task;
+			task.children.push(ret);
 			Task.STATE.INIT == ret.state ? ret.start() : ret.resolve(ret.msg);
 		} else {
 			task.resolve(ret);
 		}
 	};
+	/**
+	 * 销毁task
+	 * 这个销毁操作是至底而上
+	 * @param  {Task} task 需要销毁的Task对象
+	 */
+	Task.destroy = function(task) {
+		task.children.forEach(function(t) {
+			Task.destroy(t);
+		});
 
+		task.destroy();
+	};
 	// method plugin start ==================
 	/**
 	 * 策略模式
