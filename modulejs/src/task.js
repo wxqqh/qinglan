@@ -142,6 +142,7 @@ define('Task', function(require, exports, module) {
 
 					count == 0 && Task.reCall(task, ctx); // 策略回调，进行下一步
 				};
+			isFun(map) && (map = map.call(this, this.msg));
 			for(var k in map) {
 				count++;
 				var v = map[k];
