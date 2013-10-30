@@ -54,28 +54,28 @@
 			return m.exports;
 		},
 		getPlugin = function(id) {
-			var parts = id.split('!'), pluginId = parts[0] || '', plugSource = parts[1] || '', plugin, plugModule, m = modules[id], duration = 0, load, definition;
+			var parts = id.split('!'), pluginId = parts[0] || '', plugSource = parts[1] || '', pluginLoader, plugin = modules[id], duration = 0, load, definition;
 			
-			if(m && m.exports) { 
-				return m.exports; //如果这个资源ID已经被初始化过，则直接返回
+			if(plugin && plugin.exports) { 
+				return plugin.exports; //如果这个资源ID已经被初始化过，则直接返回
 			} else if(plugSource) {
-				m = new module(id); // 初始化资源模块
+				plugin = new module(id); // 初始化资源模块（被加载插件）
 				duration = Date.now(); // @debug
-				plugin = getExports(pluginId); // 获取插件
-				if(plugin) {
+				pluginLoader = getExports(pluginId); // 获取插件加载器
+				if(pluginLoader) {
 					load = function (definition) { // 插件加载完毕
-						m.exports = definition || {};
-						modules[id] = m; // 覆盖pluginModule
+						plugin.exports = definition || {};
+						modules[id] = plugin; // 覆盖pluginModule
 					};
-					plugin.normalize && (plugSource = plugin.normalize(plugSource)); // 如果模块定义了normalize方法，则调用它，得到标准化之后的plugSource
-					plugin.load &&  (definition = plugin.load(plugSource, require, load, define.plugin)); // 执行模块定义的load方法，所有插件加载模块都必须实现的load方法
-					!m.exports && load(definition); // 如果module的exports没有被赋值，则把load方法的返回值覆盖
+					pluginLoader.normalize && (plugSource = pluginLoader.normalize(plugSource)); // 如果加载器定义了normalize方法，则调用它，得到标准化之后的plugSource
+					pluginLoader.load &&  (definition = pluginLoader.load(plugSource, require, load, define.pluginLoader)); // 执行加载器定义的load方法，所有插件加载模块都必须实现的load方法
+					!plugin.exports && load(definition); // 如果module的exports没有被赋值，则把load方法的返回值覆盖
 					duration = Date.now() - duration; // @debug
 					console.log('module getPlugin id : ' + id + ' duration : ' + duration); // @debug
 
-					m.loader = plugin;
-					modules[pluginId].plugins.push(m.exports);
-					return m.exports; // 返回插件模块加载好的模块
+					plugin.loader = pluginLoader;
+					modules[pluginId].plugins.push(plugin.exports);
+					return plugin.exports; // 返回插件模块加载好的模块
 				} else {
 					return null;
 				}
