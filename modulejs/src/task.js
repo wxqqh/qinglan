@@ -149,8 +149,8 @@ define('Task', function(require, exports, module) {
 				var v = map[k];
 				(function(key, value) {
 					raf(function() {
-						if(isFun(value)) { // 如果是一个异步的fn，则创建Task在回调的时候执行
-							Task.create().then(value).then(function(ret){
+						if(isFun(value) || Task.isTask(value)) { // 如果是一个异步的fn，则创建Task在回调的时候执行
+							Task.create(value).then(function(ret){
 								cb(key, ret);
 							}).start();
 						} else { // 如果是一个对象，则直接调用cb
