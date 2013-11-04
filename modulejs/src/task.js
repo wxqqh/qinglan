@@ -126,6 +126,7 @@ define('Task', function(require, exports, module) {
 				this.state = Task.STATE.REJECTED;
 				this.reason = e.message;
 				ret = rejected && rejected.call(this, e); // rejected回调
+				console.log("Task REJECTED !! " + e.stack); // @debug
 			}
 			
 			this.msg = ret;
