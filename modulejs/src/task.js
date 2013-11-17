@@ -15,7 +15,7 @@ define('Task', function(require, exports, module) {
 		this.msg = msg; // 传递的消息
 		this.state = Task.STATE.INIT; // 当前task状态
 		this.reason = null; // 出错的时候抛出的原因
-		this.async = true; // task 采用同步返回
+		this.async = false; // task 采用同步返回
 
 		this.parent = null; // 父调用Task对象
 		this.handles = []; // 缓存需要处理的队列
@@ -116,14 +116,17 @@ define('Task', function(require, exports, module) {
 	 */
 	Task.strategy = {
 		'then': function(handle) {
+			var STATE = Task.STATE;
+
 			var fulfilled = handle.fulfilled,
 				rejected = handle.rejected,
 				ret = '';
 
-			try{	
-				ret = fulfilled && fulfilled.call(this, this.msg); // fulfilled回调
+			try{
+				STATE.FULFILLED == this.state && (ret = fulfilled && fulfilled.call(this, this.msg)); // fulfilled回调
+				STATE.REJECTED == this.state &&  (ret = rejected && rejected.call(this, this.msg)); // rejected回调
 			} catch(e) { // 错误处理
-				this.state = Task.STATE.REJECTED;
+				this.state = STATE.REJECTED;
 				this.reason = e.message;
 				ret = rejected && rejected.call(this, e); // rejected回调
 				console.log("Task REJECTED !! " + e.stack); // @debug
@@ -152,7 +155,7 @@ define('Task', function(require, exports, module) {
 						if(isFun(value) || Task.isTask(value)) { // 如果是一个异步的fn，则创建Task在回调的时候执行
 							Task.create(value).then(function(ret){
 								cb(key, ret);
-							}).start();
+							}).start(); // TODO处理失败回调
 						} else { // 如果是一个对象，则直接调用cb
 							cb(key, value);
 						}
@@ -197,7 +200,7 @@ define('Task', function(require, exports, module) {
 	 * @return {Task}       Task
 	 */
 	Task.prototype.resolve = function (value) {
-		if(Task.STATE.REJECTED == this.state) return this;
+		if(Task.STATE.FINISH == this.state) return this;
 		return Task.exec(this, value, Task.STATE.FULFILLED);
 	};
 
