@@ -12,7 +12,6 @@ Task在Android中开发HybridApp中由于前台和终端交互方式发生变更
 
 > 3. `shouldOverrideUrlLoading`只是其中的一种实现方式，原理其实就通过一些终端内置的并且能够接收前台传参方式来进行交互。例如`alert`、`console.log`、`confirm`、`prompt`等实现。
 
-
 但是对于前台来说，两种方式的切换是毁灭性的。因为addJavascriptInterface是**同步**返回，而伪协议是**异步**的。如：
 
 ```js
@@ -29,13 +28,13 @@ Task在Android中开发HybridApp中由于前台和终端交互方式发生变更
     webview.loadURL("javascript:window.callback('1', {ret:0, data:'4.0.4'});void(0);"); // 终端回调 
     
     // 最后的代码可能是这样子 agent.get** 是前台封装好的方法
-    agent.getVersion(function(version) {
+    agent.getVersion("Android", function(version) {
         // others
     });
 
     // 甚至，而且细心的同学肯定发现，这里一次拉多个数据的操作是串行的，这无疑给本身执行的速度带来硬伤
 
-    agent.getVersion(function(version) {
+    agent.getVersion("Android", function(version) {
         agent.getKey1(arg1, arg2, function(key1) {
             agent.getKey2(arg3, arg4, function(key2){
                     // do something
@@ -54,14 +53,14 @@ Task在Android中开发HybridApp中由于前台和终端交互方式发生变更
 
 ```js
     // Task 实现调用agent.getVersion
-    require("Task").create(agent.getVersion()).then(function(version) {
+    require("Task").create(agent.getVersion("Android")).then(function(version) {
         // do something
     }).start();
     
     // Task 实现批量拉取数据，这里每一个获取的数据都是并行的
     require("Task").create().map(function() {
         return {
-            version: agent.getVersion(),
+            version: agent.getVersion("Android"),
             key1: agent.getKey1(arg1, arg2), // 不改变原有封装参数结构
             key2: agent.getKey2(arg3, arg4)
         };
@@ -85,10 +84,10 @@ Task在Android中开发HybridApp中由于前台和终端交互方式发生变更
 
 Task也是其中的一员。
 
-> 必须得提一下的是Wind.js给我的震撼是非常大的，正如赵姐夫所说[Wind.js的唯一目的便是“改善编程体验”][7]，但是经过Wind.js预处理过的JS代码在终端上调试难度会增加（只能打log，木有断点），最后被我舍弃了。当然，Task也能一定程度上改善异步编程的体验，这会在后续的例子里面体现出来。
+> 必须得提一下的是Wind.js给我的震撼是非常大的，正如赵姐夫所说[Wind.js的唯一目的便是“改善编程体验”][5]，但是经过Wind.js预处理过的JS代码在终端上调试难度会增加（只能打log，木有断点），最后被我舍弃了。当然，Task也能一定程度上改善异步编程的体验，这会在后续的例子里面体现出来。
 
 
-在实现异步编程这个问题上已经有很多不同的方案，Task使用的是Promise异步模型。个人认为Promise中规定的是对一个异步操作的模型，操作的结果通过成功和失败两种状态的回调来赋予后续操作。其中有标准[Promises/A][5]甚至[Promises/A+][6]，而Task只是实现了Promises/A的一部分，并进行了一些修改以适用更复杂的场景。
+在实现异步编程这个问题上已经有很多不同的方案，Task使用的是Promise异步模型。个人认为Promise中规定的是对一个异步操作的模型，操作的结果通过成功和失败两种状态的回调来赋予后续操作。其中有标准[Promises/A][6]甚至[Promises/A+][7]，而Task只是实现了Promises/A的一部分，并进行了一些修改以适用更复杂的场景。
 
 ## 特性 ##
 
@@ -255,10 +254,10 @@ Task中**最基本**的方法，相对于上一个操作，其中`onFulfilled`�
 
             var i = new Image();
             i.onload = function() {
-                t.resolve(i); // 这里是用父Task的引用直接调用resolve
+                t.resolve(i); // 这里是用本Task的引用直接调用resolve
             };
             i.onerror = function() {
-                t.reject("loadError");  // 这里是用父Task的引用直接调用resolve
+                t.reject("loadError");  // 这里是用本Task的引用直接调用resolve
             };
 
             i.src = url;
@@ -303,20 +302,152 @@ Task中**最基本**的方法，相对于上一个操作，其中`onFulfilled`�
     
     // 也可以用map批量拉取图片
     Task.create().map({
-        "bdlogo": loadImgAdapter("http://www.baidu.com/img/bdlogo.gif"),
+        "bdlogo": loadImgAdapter("http://www.baidu.com/img/bdlogo.gif"), // 直接调用Adapter
         "search_logo":  loadImgAdapter("http://tb2.bdstatic.com/tb/static-common/img/search_logo_7098cbef.png")
     }).then(function(success) {
         console.log("loadImgAdapter load img success!!" + success.bdlogo.src);
     }, function(error) {
         // 如果这里拉取图片失败，则会在error里面获知。
-         console.log("loadImgAdapter load img success!!" + error.search_logo); // 加载图片失败的log
+        error.search_logo && console.log("loadImgAdapter load img success!!" + error.search_logo); // 加载图片失败的log
     }).start();
 ```
+
+> 不用担心控制`.resolve(msg)`和`.reject(msg)`会很麻烦，因为这些都推荐封装在一个Adapter里面，而前台切换伪协议的时候也只是写了**一次**，在Jsbridge的Adapter里面。
+
+## 为什么没有if、timeout等控制操作的方法 ##
+
+这个是个好问题，一个异步流程控制工具里面竟然没有这些方法。
+
+一开始Task就是为了一个"轻"字存在，在第一版的时候甚至连`.map()`方法都没有。在Task里面，必须保证每一个方法都是**有用的**并且**是必须的**。
+
+**对提供的接口做减法**，是我很推崇的做法。所以Task只是拥有极少的接口，但是已经够满足绝大部分的场景。
+
+而且，Task的代码是非常的简单。为其写扩展也是非常容易的。如果有必要，可以直接在上面做扩展支持。
+
+> `.then()`和`.map()`本身也是一个用策略模式封装的一个扩展。
+
+-------------
+
+## **切伪协议Task解决方案** ##
+
+Task主要充当的是一个调节前台/终端交互的一个中介。但是他到底只是一个中介，本身不负责请求回调逻辑。所以这里需要和前台/终端交互的工具（包括请求和回调），整合在一起。
+
+```js
+
+    
+    // 一个回调接受器可能是这样
+    define('Event', function (require, exports) {
+        var ID = 0
+        var listener = {};
+        
+        exports.add = function (fun) {
+            listener[++ID] = fun;
+            return ID;
+        };
+        // 终端通过 require("Event").emit(id, args...);　来回调前台
+        exports.emit = function (id) {
+            listener[id] && listener[id].apply(null, Array.prototype.slice.call(arguments, 1));
+        };
+    }
+    
+    
+    // 一个发送请求的封装工具肯能是这样
+    define("JSBridgeAdapter", function(require, exports) {
+        exports.send = function(namespace, fn, args) {
+            return Task.create(function () {
+                var self = this; // 保存对当前task的引用
+                this.async = true; // 采用异步返回
+                
+                // 这里每次都返回一个标志当前请求的id
+                var id = require("Event").add(function(data) {
+                    // 处理终端返回结果，例如耗时上报，错误上报等
+                    ...
+                    
+                    self.parentResolve(data); // 回调父Task
+                });
+            
+                var uri = "jsbridge://" + [encodeURIComponent(namespace), encodeURIComponent(fn), id || 0].join("/");
+                
+                // 拼凑参数
+                ...
+		       	console.log(uri); // 请求终端接口
+            });
+           
+        };
+    });
+```
+
+经过上述这么简单的步骤，就完成了Task对JSBridge的接合。
+
+```js
+    // 然后就可以调用终端方法了
+    Task.create(require("JSBridgeAdapter").send("agent", "getVersion")).then(function (version) {
+        // version 参数就是调用终端方法agent.getVersion()获取到的结果
+        // do something
+    }).start();
+```
+很多时候，我们都有自己封装好的组件，如果每次都想上面那样子调用的确有点麻烦，而且对编辑器提示/跳转支持的也不好，当然，要避免过度封装。
+
+```js
+    // 这是一个封装的组件的例子
+    define("Agent", function(){
+        return {
+            getVersion: function(key) {
+                return require("JSBridgeAdapter").send("agent", "getVersion", [key]); // 这里返回的是一个Task实例
+            },
+            ... // other Codes
+        };
+    });
+```
+
+可以看到，Task方案**不用传递CallBackFun**，也就是**不会破坏原有封装组件的参数结构**。
+
+甚至更近一步，做缓存机制，因为getVersion这种公共接口可能被调用很多次
+
+```js    
+    define("Agent", function(){
+        var cache = {};
+        return {
+            getVersion: function(key) {
+                // 如果缓存里面有，则直接返回缓存的数据， 如果缓存里面没有返回一个Task实例去获取数据
+                if(cache[key]) {
+                    return cache[key];
+                } else {
+                    return Task.create(require("JSBridgeAdapter").send("agent", "getVersion"), [key]).then(function(version) {
+                       
+                        cache[key] = version; // 做一个缓存，获取到值之后，再次调用这个接口就不用再向终端拉数据了
+                        return version; // 这里把version返回出去
+                    }); 
+                }
+            },
+            ... // other Codes
+        };
+    });
+```
+
+这样就更放心的调用这个接口了
+
+```js
+    // 封装好之后的调用方法，就达到本文开始的效果了。
+    Task.create(require("Agent").getVersion("Android")).then(function (version) {
+        // version 参数就是调用终端方法agent.getVersion()获取到的结果
+        // do something
+    }).start();
+```
+
+## **还在等什么，赶紧搞起吧** ##
+
+Task方案已经在**手Q4.6 AppStore**前台切伪协议的时候使用。
+
+## Source ##
+
+Task源码可以从[Github][8]上获取。目前Task还在不断的更新中。
 
   [1]: https://github.com/creationix/step/
   [2]: https://github.com/caolan/async/
   [3]: http://jeffreyzhao.cnblogs.com/
   [4]: https://github.com/JeffreyZhao/wind
-  [5]: http://wiki.commonjs.org/wiki/Promises/A
-  [6]: http://promisesaplus.com/
-  [7]: http://windjs.org/cn/blog/2012/07/infoq-interview-windjs-author-1/
+  [5]: http://windjs.org/cn/blog/2012/07/infoq-interview-windjs-author-1/
+  [6]: http://wiki.commonjs.org/wiki/Promises/A
+  [7]: http://promisesaplus.com/
+  [8]: https://github.com/wxqqh/qinglan/blob/master/modulejs/src/task.js
