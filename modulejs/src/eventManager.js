@@ -46,13 +46,11 @@ define("EventManager", function() {
 		},
 		register: function(interceptor /* subModuleID */, invocation /* subModule */) {
 			if(!this[interceptor]) {
-				this[interceptor] = invocation.on || function(type, fn) {
-					this.on(type + "@" + interceptor, fn);
-				};
+				this[interceptor] = invocation.on;
 				this.subModule[interceptor] = invocation.emit;
 
 			} else {
-				console.warn("EventManager#add interceptor : %s had been defined!", interceptor, this.subModule[interceptor]);
+				console.warn("EventManager#add interceptor : %s had been defined!", interceptor, this.subModule[interceptor]); // @debug
 			}
 		}
 	};
