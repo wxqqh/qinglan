@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Module Test</title>
+</head>
+<body>
+ 
+<script type="text/javascript" src="../src/module.js"></script>
+<script type="text/javascript" src="../src/module-extLoader.js"></script>
+<script type="text/javascript" src="../src/module-plugin.js"></script>
+<script type="text/javascript" src="../src/module-subModule.js"></script>
+<script type="text/javascript" src="../src/module-init.js"></script>
+<script type="text/javascript" src="../src/events.js"></script>
+<script type="text/javascript" src="../src/eventManager.js"></script>
+<script type="text/javascript" src="../src/submodule/eventManager-first.js"></script>
+<script type="text/javascript" src="../src/submodule/eventManager-delay.js"></script>
+<script type="text/javascript" src="../src/submodule/eventManager-once.js"></script>
+
+<script type="text/javascript">
+	/*var a = require('a');
+	a.show();*/
+	require("module:init");
+	
+
+	var EventManager = require("EventManager&once,first,delay");
+
+	var onceFun = function() {
+		console.log("test@once onceFun");
+	};
+
+	var firstFun = function() {
+		console.log("test@first firstFun");
+	};
+
+	var delayFun = function() {
+		console.log("test@delay delayFun");
+	};
+
+	var test = function() {
+		console.log("test");
+	}
+
+	EventManager.on("test", test);
+	EventManager.once("test", onceFun);
+	EventManager.first("test", firstFun);
+	EventManager.delay("test", delayFun);
+
+	
+	var count = 0;
+	var timeoutFun = function() {
+		count++;
+		if(count > 10) {return;}
+		EventManager.emit("test","");
+		setTimeout(timeoutFun, 50)
+	};
+
+	timeoutFun();
+
+</script>
+</body>
+</html>

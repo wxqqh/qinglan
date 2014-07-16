@@ -34,7 +34,7 @@
 			}
 
 			duration = Date.now() - duration; // @debug
-			console.log('module getExports id : ' + id + ' duration : ' + duration); // @debug
+			console.log("module getExports id : " + id + " duration : " + duration); // @debug
 			
 			return m.exports;
 		},
@@ -43,7 +43,7 @@
 			deps = deps ? [].concat(deps) : [];
 			modules[id] = new Module(id, deps, factory);
 			
-			console.log('module define id : ' + id); // @debug
+			console.log("module define id : " + id); // @debug
 			
 			return id;
 		},
@@ -53,13 +53,19 @@
 			ids = [].concat(ids);
 
 			ids.forEach(function(id){
-			 	reqs.push(getExports(id));
+			 	if(!require.extLoader) { // 默认同步加载
+					reqs.push(getExports(id));
+				} else { // 插件方式加载
+					reqs.push(require.extLoader(id)); // 通过扩展加载器加载
+				}
 			});
 
 			return reqs.length == 1 ? reqs[0] : reqs;
 		};
 
-	global.modules = modules;
+	require.getExports = getExports;
+	require.modules = modules;
+
 	global.require = require;
 	global.define = define;
 })(window);
