@@ -6,9 +6,11 @@ define("module:method", function() {
 		reg: "(?:[@](\\w+))?",
 		
 		action: function(mod, method) {
-			if(mod.exports.method) {
-				mod.callMethod = method;
-			}
+			// @if debug
+			if(!method) {return;}
+			// @endif
+			
+			mod.callMethod = method;
 		}
 	};
 	return method;

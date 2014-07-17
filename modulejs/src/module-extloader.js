@@ -28,7 +28,11 @@ define("module:extLoader", function(require) {
 
 				for (var i = 2; i < match.length; i++) { // 从第二个开始是扩展加载的正则捕获组
 					var value = match[i];
-					value && require.plugins[i-2].action.call(null, require.modules[moduleId], value);
+					if(value) {
+						var plugin = require.plugins[i-2]; // 获取当前作用plugin
+						var ret = plugin.action(require.modules[moduleId], value);
+						if(ret) {return ret;} // 如果插件加载有返回值, 则把返回值返回出去
+					}
 				}
 
 				return m;

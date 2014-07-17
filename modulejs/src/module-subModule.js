@@ -8,11 +8,12 @@ define("module:subModule", function(require) {
 		action: function(mod, subModuleIds) {
 			// @if debug
 			if(!mod.exports.register) {
-				console.warn("[module:plugin.action] moduleId: " + mod.id + " not implement the method 'register'", mod);
+				console.warn("[module:subModule.action] moduleId: " + mod.id + " not implement the method 'register'", mod);
 				return;
 			}
-			// @endif
+			
 			if(!subModuleIds) {return;}
+			// @endif
 
 			!mod.subModule && (mod.subModule = {});
 

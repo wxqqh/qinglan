@@ -10,13 +10,36 @@
 <script type="text/javascript" src="../src/module-extLoader.js"></script>
 <script type="text/javascript" src="../src/module-plugin.js"></script>
 <script type="text/javascript" src="../src/module-subModule.js"></script>
+<script type="text/javascript" src="../src/module-method.js"></script>
+<script type="text/javascript" src="../src/module-param.js"></script>
 <script type="text/javascript" src="../src/module-init.js"></script>
 <script type="text/javascript" src="../src/events.js"></script>
 <script type="text/javascript" src="../src/eventManager.js"></script>
-<script type="text/javascript" src="../src/submodule/eventManager-first.js"></script>
+<script type="text/javascript" src="../src/subModule/eventManager-first.js"></script>
 <script type="text/javascript" src="../src/submodule/eventManager-delay.js"></script>
 <script type="text/javascript" src="../src/submodule/eventManager-once.js"></script>
+<script type="text/javascript">
 
+	define("test", function(require, exports, module) {
+		var count = 0;
+		var test = {
+			parse: function(params, parse) {
+				return parse(params);
+			},
+			defaultMethod: function(param) {
+				console.log("test@defaultMethod" + JSON.stringify(param), param);
+			},
+			callMethod: function(param) {
+				console.log("test@callMethod" + JSON.stringify(param), param);
+				return ++count;
+			}
+		}
+
+		module.defaultMethod = "defaultMethod";
+
+		return test;
+	});
+</script>
 <script type="text/javascript">
 	/*var a = require('a');
 	a.show();*/
@@ -27,18 +50,21 @@
 
 	var onceFun = function() {
 		console.log("test@once onceFun");
+		require("test?caller=onceFun");
 	};
 
 	var firstFun = function() {
 		console.log("test@first firstFun");
+		require("test?caller=firstFun");
 	};
 
 	var delayFun = function() {
 		console.log("test@delay delayFun");
+		require("test?caller=delayFun");
 	};
 
 	var test = function() {
-		console.log("test");
+		console.log("test" + require("test@callMethod?caller=test"));
 	}
 
 	EventManager.on("test", test);
@@ -56,7 +82,7 @@
 	};
 
 	timeoutFun();
-
+	
 </script>
 </body>
 </html>
