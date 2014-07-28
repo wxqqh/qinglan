@@ -1,9 +1,9 @@
 define("EventManager", function() {
-	var EventEmitter = require("events").eventEmitter;
+	var EventEmitter = require("Events").eventEmitter;
 	
 	var manager = {
 		env: new EventEmitter(),
-		subModule	: {},
+		subModule: {},
 		on: function() {
 			this.env.on.apply(this.env, arguments);
 		},
@@ -20,9 +20,12 @@ define("EventManager", function() {
 					console.time("EventManager#emit invoke : " + interceptor); // @debu
 					this.subModule[interceptor].apply(this, arguments);
 					console.timeEnd("EventManager#emit invoke : " + interceptor); // @debug
-				} else {
+				}
+				// @if debug
+				else {
 					console.warn("EventManager#emit interceptor : %s had not defined!", interceptor); // @debug
 				}
+				// @endif
 
 			} else { // 直接触发事件
 			
@@ -49,9 +52,12 @@ define("EventManager", function() {
 				this[interceptor] = invocation.on;
 				this.subModule[interceptor] = invocation.emit;
 
-			} else {
-				console.warn("EventManager#add interceptor : %s had been defined!", interceptor, this.subModule[interceptor]); // @debug
 			}
+			// @if debug
+			else {
+				console.warn("EventManager#add interceptor : %s had been defined!", interceptor, this.subModule[interceptor]);
+			}
+			// @endif
 		}
 	};
 	return manager;

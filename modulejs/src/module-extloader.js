@@ -34,7 +34,7 @@ define("module:extLoader", function(require) {
 						if(ret) {return ret;} // 如果插件加载有返回值, 则把返回值返回出去
 					}
 				}
-
+				
 				return m;
 
 			} else { // 加载出错
