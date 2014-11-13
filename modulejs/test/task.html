@@ -206,6 +206,11 @@
 	}, function(errmsg) { // 获取失败，
 		console.log("loadImgAdapter load img error" + errmsg);
 	}).start();
+
+loadImgAdapter("http://www.baidu.com/img/bdlogo.gif").then(function(img){
+			console.log("loadImgAdapter load img success!!" + img.src);
+		}).start();
+
 	</script>
 </body>
 </html>

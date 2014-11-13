@@ -131,9 +131,10 @@ define('Task', function(require, exports, module) {
 				ret = rejected && rejected.call(this, e); // rejected回调
 				console.log("Task REJECTED !! " + e.stack); // @debug
 			}
-			
-			this.msg = ret;
-			Task.reCall(this, ret); // 策略回调，进行下一步
+			if(!this.async) { // 如果是同步返回
+				this.msg = ret;
+				Task.reCall(this, ret); // 策略回调，进行下一步
+			} // 异步返回需要等待
 		},
 		'map': function(handle) {
 			var task = this,
@@ -153,13 +154,12 @@ define('Task', function(require, exports, module) {
 				(function(key, value) {
 					raf(function() {
 						if(isFun(value) || Task.isTask(value)) { // 如果是一个异步的fn，则创建Task在回调的时候执行
-							Task.create(value).then(function(ret){
+							value.then(function(ret){
 								cb(key, ret);
 							}).start(); // TODO处理失败回调
 						} else { // 如果是一个对象，则直接调用cb
 							cb(key, value);
 						}
-						
 					});
 				})(k, v);
 			}
@@ -219,7 +219,7 @@ define('Task', function(require, exports, module) {
 	 * @return {Task}       Task
 	 */
 	Task.prototype.parentResolve = function (value) {
-		this.parent && this.parent.resolve(value);
+		this.parent ? this.parent.resolve(value) : this.resolve(value);
 		return this;
 	};
 	
@@ -229,7 +229,7 @@ define('Task', function(require, exports, module) {
 	 * @return {Task}       Task
 	 */
 	Task.prototype.parentReject = function (value) {
-		this.parent && this.parent.reject(value);
+		this.parent ? this.parent.reject(value) : this.reject(value);
 		return this;
 	};
 	/**
