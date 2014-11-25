@@ -240,7 +240,7 @@ define('Task', function(require, exports, module) {
 		while(isFun(this.msg)) {
 			this.msg = this.msg.call(this);
 		}
-		return this.resolve(this.msg); // start All
+		return !this.async ? this.resolve(this.msg) : this; // start All
 	};
  	
  	/**

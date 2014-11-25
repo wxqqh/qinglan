@@ -184,7 +184,7 @@
 	}).start();
 
 	var loadImgAdapter = function (src) {
-		return Task.create().then(function () {
+		return Task.create(function () {
 			var self = this,
 				i = new Image();
 
