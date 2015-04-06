@@ -154,7 +154,7 @@ define('Task', function(require, exports, module) {
 				(function(key, value) {
 					raf(function() {
 						if(isFun(value) || Task.isTask(value)) { // 如果是一个异步的fn，则创建Task在回调的时候执行
-							value.then(function(ret){
+							Task.create(value).then(function(ret){
 								cb(key, ret);
 							}).start(); // TODO处理失败回调
 						} else { // 如果是一个对象，则直接调用cb
